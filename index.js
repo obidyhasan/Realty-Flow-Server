@@ -21,6 +21,16 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+    // Collections
+    const userCollection = client.db("realtyFlowDB").collection("users");
+
+    // Users Apis
+    app.post("/api/users", async (req, res) => {
+      const userInfo = req.body;
+      const result = await userCollection.insertOne(userInfo);
+      res.send(result);
+    });
+
     await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
