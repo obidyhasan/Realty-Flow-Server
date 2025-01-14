@@ -39,6 +39,14 @@ async function run() {
       res.send(result);
     });
 
+    // Get Single User
+    app.get("/api/user/:email", async (req, res) => {
+      const { email } = req.params;
+      const query = { email: email };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+
     await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
