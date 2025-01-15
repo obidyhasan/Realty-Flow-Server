@@ -24,6 +24,9 @@ async function run() {
   try {
     // Collections
     const userCollection = client.db("realtyFlowDB").collection("users");
+    const propertiesCollection = client
+      .db("realtyFlowDB")
+      .collection("properties");
 
     // Verify Token Middleware
     const verifyToken = (req, res, next) => {
@@ -49,7 +52,8 @@ async function run() {
       res.send({ token });
     });
 
-    // Users Apis
+    // ------------- Users Apis -------------
+    // caret user api
     app.post("/api/users", async (req, res) => {
       const userInfo = req.body;
 
@@ -74,6 +78,14 @@ async function run() {
 
       const query = { email: email };
       const result = await userCollection.findOne(query);
+      res.send(result);
+    });
+
+    // -------------- Properties APIs ------------
+    // Post properties api (Agent Access)
+    app.post("/api/properties", verifyToken, async (req, res) => {
+      const propertyInfo = req.body;
+      const result = await propertiesCollection.insertOne(propertyInfo);
       res.send(result);
     });
 
