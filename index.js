@@ -43,6 +43,20 @@ async function run() {
       });
     };
 
+    // Agent Verify
+    // use verify agent after verifyToken
+    const verifyAgent = async (req, res, next) => {
+      const email = req?.decode?.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const isAgent = user?.role === "Agent";
+
+      if (!isAgent) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
+
     // JWT Token Create api
     app.post("/api/jwt", async (req, res) => {
       const user = req.body;
@@ -53,7 +67,7 @@ async function run() {
     });
 
     // ------------- Users Apis -------------
-    // caret user api
+    // caret user api (public, user)
     app.post("/api/users", async (req, res) => {
       const userInfo = req.body;
 
@@ -68,7 +82,7 @@ async function run() {
       res.send(result);
     });
 
-    // Get Single User
+    // Get Single User (User)
     app.get("/api/user/:email", verifyToken, async (req, res) => {
       const { email } = req.params;
 
@@ -83,7 +97,7 @@ async function run() {
 
     // -------------- Properties APIs ------------
     // Post properties api (Agent Access)
-    app.post("/api/properties", verifyToken, async (req, res) => {
+    app.post("/api/properties", verifyToken, verifyAgent, async (req, res) => {
       const propertyInfo = req.body;
       const result = await propertiesCollection.insertOne(propertyInfo);
       res.send(result);
