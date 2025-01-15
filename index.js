@@ -25,6 +25,21 @@ async function run() {
     // Collections
     const userCollection = client.db("realtyFlowDB").collection("users");
 
+    // Verify Token Middleware
+    const verifyToken = (req, res, next) => {
+      if (!req?.headers?.authorization) {
+        return res.status(401).send({ message: "unauthorized access" });
+      }
+      const token = req.headers?.authorization.split(" ")[1];
+      jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decode) => {
+        if (err) {
+          return res.status(401).send({ message: "unauthorized access" });
+        }
+        req.decode = decode;
+        next();
+      });
+    };
+
     // JWT Token Create api
     app.post("/api/jwt", async (req, res) => {
       const user = req.body;
