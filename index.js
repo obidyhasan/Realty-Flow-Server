@@ -103,6 +103,19 @@ async function run() {
       res.send(result);
     });
 
+    // Get Properties by Email (Agent Access)
+    app.get(
+      "/api/properties/:email",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const { email } = req.params;
+        const query = { "agent.email": email };
+        const result = await propertiesCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
+
     await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
