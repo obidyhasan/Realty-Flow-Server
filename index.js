@@ -4,7 +4,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 // Middleware
 app.use(cors());
@@ -112,6 +112,27 @@ async function run() {
         const { email } = req.params;
         const query = { "agent.email": email };
         const result = await propertiesCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
+
+    // Get Single property by Id
+    app.get("/api/property/:id", verifyToken, async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: new ObjectId(id) };
+      const result = await propertiesCollection.findOne(query);
+      res.send(result);
+    });
+
+    // Delete Property by id (agent access)
+    app.delete(
+      "/api/properties/:id",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const { id } = req.params;
+        const query = { _id: new ObjectId(id) };
+        const result = await propertiesCollection.deleteOne(query);
         res.send(result);
       }
     );
