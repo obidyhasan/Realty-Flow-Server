@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 5000;
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion } = require("mongodb");
 
@@ -23,6 +24,15 @@ async function run() {
   try {
     // Collections
     const userCollection = client.db("realtyFlowDB").collection("users");
+
+    // JWT Token Create api
+    app.post("/api/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.JWT_SECRET_KEY, {
+        expiresIn: "30 days",
+      });
+      res.send({ token });
+    });
 
     // Users Apis
     app.post("/api/users", async (req, res) => {
