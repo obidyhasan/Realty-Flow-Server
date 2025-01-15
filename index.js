@@ -124,6 +124,28 @@ async function run() {
       res.send(result);
     });
 
+    // Update property using id (agent access)
+    app.patch(
+      "/api/property/:id",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const { id } = req.params;
+        const propertyInfo = req.body;
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            image: propertyInfo?.image,
+            title: propertyInfo?.title,
+            location: propertyInfo?.location,
+            priceRange: propertyInfo?.priceRange,
+          },
+        };
+        const result = await propertiesCollection.updateOne(query, updateDoc);
+        res.send(result);
+      }
+    );
+
     // Delete Property by id (agent access)
     app.delete(
       "/api/properties/:id",
