@@ -65,8 +65,13 @@ async function run() {
     });
 
     // Get Single User
-    app.get("/api/user/:email", async (req, res) => {
+    app.get("/api/user/:email", verifyToken, async (req, res) => {
       const { email } = req.params;
+
+      if (email !== req?.decode?.email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+
       const query = { email: email };
       const result = await userCollection.findOne(query);
       res.send(result);
