@@ -116,6 +116,12 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/api/all-properties", verifyToken, async (req, res) => {
+      const query = { verificationStatus: "Verified" };
+      const result = await propertiesCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // Post properties api (Agent Access)
     app.post("/api/properties", verifyToken, verifyAgent, async (req, res) => {
       const propertyInfo = req.body;
