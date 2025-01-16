@@ -133,6 +133,14 @@ async function run() {
       }
     );
 
+    // delete user by id (admin access)
+    app.delete("/api/users/:id", verifyToken, verifyAdmin, async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
+
     // -------------- Properties APIs ------------
 
     // Get all Properties for admin (admin access)
