@@ -144,6 +144,25 @@ async function run() {
       res.send(result);
     });
 
+    // Update property status using id (Admin access)
+    app.patch(
+      "/api/property/status/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const { id } = req.params;
+        const status = req.body;
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            verificationStatus: status?.verificationStatus,
+          },
+        };
+        const result = await propertiesCollection.updateOne(query, updateDoc);
+        res.send(result);
+      }
+    );
+
     // Update property using id (agent access)
     app.patch(
       "/api/property/:id",
