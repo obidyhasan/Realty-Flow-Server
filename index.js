@@ -57,6 +57,19 @@ async function run() {
       next();
     };
 
+    // Admin Verify
+    const verifyAdmin = async (req, res, next) => {
+      const email = req?.decode?.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      const isAdmin = user?.role === "Admin";
+
+      if (!isAdmin) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
+
     // JWT Token Create api
     app.post("/api/jwt", async (req, res) => {
       const user = req.body;
@@ -96,6 +109,13 @@ async function run() {
     });
 
     // -------------- Properties APIs ------------
+
+    // Get all Properties for admin (admin access)
+    app.get("/api/properties", verifyToken, verifyAdmin, async (req, res) => {
+      const result = await propertiesCollection.find().toArray();
+      res.send(result);
+    });
+
     // Post properties api (Agent Access)
     app.post("/api/properties", verifyToken, verifyAgent, async (req, res) => {
       const propertyInfo = req.body;
