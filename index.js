@@ -5,10 +5,17 @@ const port = process.env.PORT || 5000;
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const admin = require("firebase-admin");
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Firebase Admin
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.0m3jt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -134,11 +141,15 @@ async function run() {
     );
 
     // delete user by id (admin access)
-    app.delete("/api/users/:id", verifyToken, verifyAdmin, async (req, res) => {
-      const { id } = req.params;
+    app.delete("/api/users", verifyToken, verifyAdmin, async (req, res) => {
+      const { id, uid } = req.query;
+      // Delete From Database
       const query = { _id: new ObjectId(id) };
-      const result = await userCollection.deleteOne(query);
-      res.send(result);
+      const resultDatabase = await userCollection.deleteOne(query);
+
+      // delete from firebase
+      await admin.auth().deleteUser(uid);
+      res.send(resultDatabase);
     });
 
     // -------------- Properties APIs ------------
