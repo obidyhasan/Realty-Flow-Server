@@ -108,6 +108,31 @@ async function run() {
       res.send(result);
     });
 
+    // Get All user (admin access)
+    app.get("/api/users", verifyToken, verifyAdmin, async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    // Update User role by id (admin access)]
+    app.patch(
+      "/api/users/role/:id",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const { id } = req.params;
+        const userInfo = req.body;
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            role: userInfo?.role,
+          },
+        };
+        const result = await userCollection.updateOne(query, updateDoc);
+        res.send(result);
+      }
+    );
+
     // -------------- Properties APIs ------------
 
     // Get all Properties for admin (admin access)
