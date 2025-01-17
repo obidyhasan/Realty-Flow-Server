@@ -183,8 +183,23 @@ async function run() {
     });
 
     app.get("/api/all-properties", verifyToken, async (req, res) => {
-      const query = { verificationStatus: "Verified" };
-      const result = await propertiesCollection.find(query).toArray();
+      const { search, sort } = req.query;
+      let query = {};
+      query = { verificationStatus: "Verified" };
+
+      if (search) {
+        query = { ...query, location: { $regex: search, $options: "i" } };
+      }
+
+      // Sort by price
+      let options = {};
+      if (sort === "true") {
+        options = {
+          sort: { "priceRange.min": 1 },
+        };
+      }
+
+      const result = await propertiesCollection.find(query, options).toArray();
       res.send(result);
     });
 
