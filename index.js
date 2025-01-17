@@ -140,6 +140,28 @@ async function run() {
       }
     );
 
+    // Make user to fraud (admin access)
+    app.patch(
+      "/api/users/status/:email",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const { email } = req.params;
+        const statusInfo = req.body;
+        const query = { email: email };
+        const updateDoc = {
+          $set: {
+            status: statusInfo.status,
+          },
+        };
+        const filter = { "agent.email": email };
+        const updateResult = await userCollection.updateOne(query, updateDoc);
+        const deleteResult = await propertiesCollection.deleteMany(filter);
+
+        res.send(updateResult);
+      }
+    );
+
     // delete user by id (admin access)
     app.delete("/api/users", verifyToken, verifyAdmin, async (req, res) => {
       const { id, uid } = req.query;
