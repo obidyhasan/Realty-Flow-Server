@@ -34,6 +34,8 @@ async function run() {
     const propertiesCollection = client
       .db("realtyFlowDB")
       .collection("properties");
+    const wishlistCollection = client.db("realtyFlowDB").collection("wishlist");
+    const reviewCollection = client.db("realtyFlowDB").collection("reviews");
 
     // Verify Token Middleware
     const verifyToken = (req, res, next) => {
@@ -265,6 +267,7 @@ async function run() {
             title: propertyInfo?.title,
             location: propertyInfo?.location,
             priceRange: propertyInfo?.priceRange,
+            description: propertyInfo?.description,
           },
         };
         const result = await propertiesCollection.updateOne(query, updateDoc);
@@ -284,6 +287,52 @@ async function run() {
         res.send(result);
       }
     );
+
+    // ---------------------- Wishlist Collection API -------------
+    // add wishlist
+    app.post("/api/wishlist", verifyToken, async (req, res) => {
+      const wishlistInfo = req.body;
+      const result = await wishlistCollection.insertOne(wishlistInfo);
+      res.send(result);
+    });
+
+    // get wishlist by user email (user access)
+    app.get("/api/wishlist/:email", verifyToken, async (req, res) => {
+      const { email } = req.params;
+      if (req?.decode?.email !== email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+
+      const pipeline = [
+        {
+          $match: { userEmail: email }, // Match based on user email
+        },
+        {
+          $addFields: {
+            propertyId: { $toObjectId: "$propertyId" }, // Convert propertyId to ObjectId
+          },
+        },
+        {
+          $lookup: {
+            from: "properties", // Target collection
+            localField: "propertyId", // Converted ObjectId field
+            foreignField: "_id", // _id in properties collection
+            as: "propertyDetails", // Output array
+          },
+        },
+      ];
+
+      const result = await wishlistCollection.aggregate(pipeline).toArray();
+      res.send(result);
+    });
+
+    // ------------------ Review Collection API ---------------
+    // add review
+    app.post("/api/reviews", verifyToken, async (req, res) => {
+      const reviewInfo = req.body;
+      const result = await reviewCollection.insertOne(reviewInfo);
+      res.send(result);
+    });
 
     await client.connect();
     // Send a ping to confirm a successful connection
