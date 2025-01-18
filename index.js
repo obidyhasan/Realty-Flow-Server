@@ -37,6 +37,9 @@ async function run() {
       .collection("properties");
     const wishlistCollection = client.db("realtyFlowDB").collection("wishlist");
     const reviewCollection = client.db("realtyFlowDB").collection("reviews");
+    const advertiseCollection = client
+      .db("realtyFlowDB")
+      .collection("advertise");
     const makeOfferCollection = client
       .db("realtyFlowDB")
       .collection("makeOffer");
@@ -208,6 +211,18 @@ async function run() {
       const result = await propertiesCollection.find(query, options).toArray();
       res.send(result);
     });
+
+    // get only verified properties (admin-access)
+    app.get(
+      "/api/admin/properties/verified",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const query = { verificationStatus: "Verified" };
+        const result = await propertiesCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
 
     // Post properties api (Agent Access)
     app.post("/api/properties", verifyToken, verifyAgent, async (req, res) => {
@@ -576,6 +591,18 @@ async function run() {
       });
       res.send({ clientSecret: paymentIntent.client_secret });
     });
+
+    // --------------------- Advertise Property --------------
+    app.post(
+      "/api/advertise/property",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const advertiseInfo = req.body;
+        const result = await advertiseCollection.insertOne(advertiseInfo);
+        res.send(result);
+      }
+    );
 
     await client.connect();
     // Send a ping to confirm a successful connection
