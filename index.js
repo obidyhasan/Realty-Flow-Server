@@ -454,11 +454,26 @@ async function run() {
       }
     );
 
+    // update payment info
+    app.patch("/api/makeOffer/payment/:id", verifyToken, async (req, res) => {
+      const { id } = req.params;
+      const paymentInfo = req.body;
+      const query = { _id: new ObjectId(id) };
+      const updateInfo = {
+        $set: {
+          status: paymentInfo.status,
+          transactionId: paymentInfo.transactionId,
+        },
+      };
+      const result = await makeOfferCollection.updateOne(query, updateInfo);
+      res.send(result);
+    });
+
     // ---------------------- Stripe Payment --------------------------
     app.post("/api/create-payment-intent", async (req, res) => {
       const { price } = req.body;
       const amount = parseInt(price * 100);
-      const paymentIntent = await stripe.paymentIntent.create({
+      const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: "usd",
         payment_method_types: ["card"],
