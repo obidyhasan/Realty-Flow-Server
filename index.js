@@ -36,6 +36,9 @@ async function run() {
       .collection("properties");
     const wishlistCollection = client.db("realtyFlowDB").collection("wishlist");
     const reviewCollection = client.db("realtyFlowDB").collection("reviews");
+    const makeOfferCollection = client
+      .db("realtyFlowDB")
+      .collection("makeOffer");
 
     // Verify Token Middleware
     const verifyToken = (req, res, next) => {
@@ -296,6 +299,30 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/api/wishlist/offer/:id", verifyToken, async (req, res) => {
+      const { id } = req.params;
+      const pipeline = [
+        {
+          $match: { _id: new ObjectId(id) }, // Match based on user email
+        },
+        {
+          $addFields: {
+            propertyId: { $toObjectId: "$propertyId" }, // Convert propertyId to ObjectId
+          },
+        },
+        {
+          $lookup: {
+            from: "properties", // Target collection
+            localField: "propertyId", // Converted ObjectId field
+            foreignField: "_id", // _id in properties collection
+            as: "propertyDetails", // Output array
+          },
+        },
+      ];
+
+      const result = await wishlistCollection.aggregate(pipeline).toArray();
+      res.send(result);
+    });
     // get wishlist by user email (user access)
     app.get("/api/wishlist/:email", verifyToken, async (req, res) => {
       const { email } = req.params;
@@ -331,6 +358,27 @@ async function run() {
     app.post("/api/reviews", verifyToken, async (req, res) => {
       const reviewInfo = req.body;
       const result = await reviewCollection.insertOne(reviewInfo);
+      res.send(result);
+    });
+
+    // ----------------- Make Offer Collection API ----------------
+    // add offer
+    app.post("/api/makeOffer", verifyToken, async (req, res) => {
+      const offerInfo = req.body;
+      const result = await makeOfferCollection.insertOne(offerInfo);
+      res.send(result);
+    });
+
+    // get offer by specific user by email
+    app.get("/api/makeOffer/user/:email", verifyToken, async (req, res) => {
+      const { email } = req.params;
+
+      if (email !== req?.decode?.email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+
+      const query = { buyerEmail: email };
+      const result = await makeOfferCollection.findOne(query);
       res.send(result);
     });
 
