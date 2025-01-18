@@ -382,7 +382,7 @@ async function run() {
       res.send(result);
     });
 
-    // get offer by specific agent by email
+    // get offer by specific agent by email (agent access)
     app.get(
       "/api/makeOffer/agent/:email",
       verifyToken,
@@ -391,6 +391,25 @@ async function run() {
         const { email } = req.params;
         const query = { agentEmail: email };
         const result = await makeOfferCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
+
+    // Update offer property status by agent (agent access)
+    app.patch(
+      "/api/makeOffer/status/:id",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const { id } = req.params;
+        const statusInfo = req.body;
+        const query = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            status: statusInfo.status,
+          },
+        };
+        const result = await makeOfferCollection.updateOne(query, updateDoc);
         res.send(result);
       }
     );
