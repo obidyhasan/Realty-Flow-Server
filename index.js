@@ -395,6 +395,53 @@ async function run() {
       res.send(result);
     });
 
+    // get latest reviews
+    app.get("/api/latest/reviews", async (req, res) => {
+      const pipeline = [
+        {
+          $addFields: {
+            propertyId: { $toObjectId: "$propertyId" },
+          },
+        },
+        {
+          $sort: { reviewTimestamp: -1 },
+        },
+        {
+          $limit: 4,
+        },
+        {
+          $lookup: {
+            from: "properties",
+            localField: "propertyId",
+            foreignField: "_id",
+            as: "property",
+          },
+        },
+      ];
+
+      const result = await reviewCollection.aggregate(pipeline).toArray();
+      res.send(result);
+    });
+
+    // Get all review for admin (admin access)
+    app.get(
+      "/api/admin/reviews",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const result = await reviewCollection.find().toArray();
+        res.send(result);
+      }
+    );
+
+    // get review specific property
+    app.get("/api/reviews/property/:id", verifyToken, async (req, res) => {
+      const { id } = req.params;
+      const query = { propertyId: id };
+      const result = await reviewCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // Delete review by user
     app.delete("/api/review/:id", verifyToken, async (req, res) => {
       const { id } = req.params;
