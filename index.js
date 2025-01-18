@@ -370,6 +370,14 @@ async function run() {
       res.send(result);
     });
 
+    // Get reviews for specific users
+    app.get("/api/reviews/:email", verifyToken, async (req, res) => {
+      const { email } = req.params;
+      const query = { reviewerEmail: email };
+      const result = await reviewCollection.find(query).toArray();
+      res.send(result);
+    });
+
     // ----------------- Make Offer Collection API ----------------
     // add offer
     app.post("/api/makeOffer", verifyToken, async (req, res) => {
@@ -468,6 +476,22 @@ async function run() {
       const result = await makeOfferCollection.updateOne(query, updateInfo);
       res.send(result);
     });
+
+    // Get the sold properties form agent (agent access)
+    app.get(
+      "/api/makeOffer/sold/:email",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const { email } = req.params;
+        const query = {
+          agentEmail: email,
+          status: "Bought",
+        };
+        const result = await makeOfferCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
 
     // ---------------------- Stripe Payment --------------------------
     app.post("/api/create-payment-intent", async (req, res) => {
