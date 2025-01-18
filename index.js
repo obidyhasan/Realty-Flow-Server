@@ -353,6 +353,14 @@ async function run() {
       res.send(result);
     });
 
+    // Delete wishlist from specific user
+    app.delete("/api/wishlist/:id", verifyToken, async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: new ObjectId(id) };
+      const result = await wishlistCollection.deleteOne(query);
+      res.send(result);
+    });
+
     // ------------------ Review Collection API ---------------
     // add review
     app.post("/api/reviews", verifyToken, async (req, res) => {
@@ -410,6 +418,30 @@ async function run() {
           },
         };
         const result = await makeOfferCollection.updateOne(query, updateDoc);
+        res.send(result);
+      }
+    );
+
+    // update offer property status whish are pending (agent access)
+    app.patch(
+      "/api/makeOffer/properties/:id",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const { id } = req.params;
+        const { newStatus, excludedStatus } = req.body;
+        const query = {
+          propertyId: id,
+          status: { $ne: excludedStatus },
+        };
+
+        const updateDoc = {
+          $set: {
+            status: newStatus,
+          },
+        };
+
+        const result = await makeOfferCollection.updateMany(query, updateDoc);
         res.send(result);
       }
     );
