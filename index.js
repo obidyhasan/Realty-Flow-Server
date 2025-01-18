@@ -378,9 +378,22 @@ async function run() {
       }
 
       const query = { buyerEmail: email };
-      const result = await makeOfferCollection.findOne(query);
+      const result = await makeOfferCollection.find(query).toArray();
       res.send(result);
     });
+
+    // get offer by specific agent by email
+    app.get(
+      "/api/makeOffer/agent/:email",
+      verifyToken,
+      verifyAgent,
+      async (req, res) => {
+        const { email } = req.params;
+        const query = { agentEmail: email };
+        const result = await makeOfferCollection.find(query).toArray();
+        res.send(result);
+      }
+    );
 
     await client.connect();
     // Send a ping to confirm a successful connection
