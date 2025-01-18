@@ -373,8 +373,33 @@ async function run() {
     // Get reviews for specific users
     app.get("/api/reviews/:email", verifyToken, async (req, res) => {
       const { email } = req.params;
-      const query = { reviewerEmail: email };
-      const result = await reviewCollection.find(query).toArray();
+      const pipeline = [
+        {
+          $match: { reviewerEmail: email },
+        },
+        {
+          $addFields: {
+            propertyId: { $toObjectId: "$propertyId" },
+          },
+        },
+        {
+          $lookup: {
+            from: "properties",
+            localField: "propertyId",
+            foreignField: "_id",
+            as: "property",
+          },
+        },
+      ];
+      const result = await reviewCollection.aggregate(pipeline).toArray();
+      res.send(result);
+    });
+
+    // Delete review by user
+    app.delete("/api/review/:id", verifyToken, async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: new ObjectId(id) };
+      const result = await reviewCollection.deleteOne(query);
       res.send(result);
     });
 
