@@ -10,7 +10,13 @@ const admin = require("firebase-admin");
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://realty-flow-platform.web.app", // Frontend URL
+    methods: ["GET", "POST", "PATCH", "DELETE"], // Allowed methods
+    allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
+  })
+);
 app.use(express.json());
 
 // Firebase Admin
