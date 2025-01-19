@@ -604,6 +604,12 @@ async function run() {
       }
     );
 
+    // get advertise property (public)
+    app.get("/api/advertise", async (req, res) => {
+      const result = await advertiseCollection.find().toArray();
+      res.send(result);
+    });
+
     await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
